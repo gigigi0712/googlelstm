@@ -1,0 +1,170 @@
+# --- Experiment configurations --------------------------------------------------------------------
+
+# experiment name, used as folder name
+experiment_name: cudalstm_caravan_camels_531_runoff_basins_debug_exp4
+
+# place to store run directory (if empty runs are stored in $cwd$/runs/)
+run_dir:
+
+# files to specify training, validation and test basins (relative to code root or absolute path)
+train_basin_file: caravan_531_basin_list.txt
+validation_basin_file: caravan_531_basin_list.txt
+test_basin_file: caravan_531_basin_list.txt
+
+# training, validation and test time periods (format = 'dd/mm/yyyy')
+train_start_date: '01/10/1999'
+train_end_date: '30/09/2004'
+validation_start_date: '01/10/2004'
+validation_end_date: '02/10/2006'
+test_start_date: '03/10/2006'
+test_end_date: '30/09/2008'
+
+# fixed seed, leave empty to use a random seed
+seed: 123
+
+# which GPU (id) to use [in format of cuda:0, cuda:1 etc, or cpu or None]
+device: cuda:0
+
+# --- Validation configuration ---------------------------------------------------------------------
+
+# specify after how many epochs to perform validation
+validate_every: 5
+
+# specify how many random basins to use for validation
+validate_n_random_basins: 531
+
+# specify which metrics to calculate during validation (see codebase.evaluation.metrics)
+metrics:
+- NSE
+- RMSE
+- KGE
+
+# --- Model configuration --------------------------------------------------------------------------
+
+# base model type [lstm, ealstm, cudalstm, embcudalstm, shortcutlstm, dropoutlstm, cudalstminitialh]
+# (has to match the if statement in modelzoo/__init__.py)
+model: cudalstm
+
+# prediction head [regression, mdn, umal]. Define the head specific parameters below
+head: regression
+
+# ----> General settings <----
+
+# Number of cell states of the LSTM
+hidden_size: 128
+
+# Initial bias value of the forget gate
+initial_forget_bias: 3
+
+# Dropout applied to the output of the LSTM
+output_dropout: 0.4
+
+output_activation: linear
+
+# --- Training configuration -----------------------------------------------------------------------
+
+# specify optimizer [Adam, Adadelta]
+optimizer: Adam
+
+# specify loss [MSE, NSE, RMSE, UMALLoss, MDNLoss]
+loss: MSE
+
+# specify learning rates to use starting at specific epochs (0 is the initial learning rate)
+learning_rate:
+    0: 1e-3
+    1: 5e-4
+
+# Mini-batch size
+batch_size: 256
+
+# Number of training epochs
+epochs: 30
+
+# If True, clips norm of gradients
+clip_gradient_norm: 1
+
+# Defines which time steps are used to calculate the loss. Can't be larger than seq_length
+predict_last_n: 1
+
+# Length of the input sequence
+seq_length: 365
+
+# Number of parallel workers used in the data pipeline
+num_workers: 0
+
+# Log the training loss every n steps
+log_interval: 5
+
+# If true, writes logging results into tensorboard file
+log_tensorboard: True
+
+# Save model weights every n epochs
+save_weights_every: 1
+
+# Store the results of the validation to disk
+save_validation_results: True
+
+# --- Data configurations --------------------------------------------------------------------------
+
+dataset: grdc
+
+# Path to CAMELS data set
+data_dir: /home/dalhxwlyjsuo/criait/share/gaozhiyi/caravan
+
+# Forcing product [daymet, maurer, maurer_extended, nldas, nldas_extended]
+# can be either a list of forcings or a single forcing product
+forcings:
+- daymet
+
+# variables to use as time series input (names match the data file column headers)
+# Note: In case of multiple input forcing products, you have to append the forcing product behind
+# each variable. E.g. 'prcp(mm/day)' of the daymet product is 'prcp(mm/day)_daymet'
+dynamic_inputs:
+- total_precipitation_sum
+- temperature_2m_mean
+- surface_net_solar_radiation_mean
+- surface_net_thermal_radiation_mean
+- snow_depth_water_equivalent_mean
+- surface_pressure_mean
+- streamflow
+# which columns to use as target
+target_variables:
+- streamflow
+
+static_attributes:
+- area
+- inu_pc_smn
+- inu_pc_smx
+- lka_pc_sse
+- lkv_mc_usu
+- rev_mc_usu
+- ria_ha_usu
+- riv_tc_usu
+- ele_mt_sav
+- slp_dg_sav
+- tmp_dc_syr
+- pre_mm_syr
+- pet_mm_syr
+- aet_mm_syr
+- ari_ix_sav
+- cmi_ix_syr
+- snw_pc_syr
+- for_pc_sse
+- crp_pc_sse
+- pst_pc_sse
+- ire_pc_sse
+- gla_pc_sse
+- prm_pc_sse
+- pac_pc_sse
+- cly_pc_sav
+- slt_pc_sav
+- snd_pc_sav
+- soc_th_sav
+- swc_pc_syr
+- kar_pc_sse
+- ero_kh_sav
+- pop_ct_usu
+- ppd_pk_sav
+- urb_pc_sse
+- nli_ix_sav
+- gdp_ud_ssu

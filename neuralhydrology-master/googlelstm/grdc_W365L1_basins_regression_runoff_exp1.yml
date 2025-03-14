@@ -1,0 +1,198 @@
+# --- Experiment configurations --------------------------------------------------------------------
+
+# experiment name, used as folder name
+experiment_name: grdc_basins_W365L1_regression_runoff_exp1
+
+# place to store run directory (if empty runs are stored in $cwd$/runs/)
+run_dir:
+
+# files to specify training, validation and test basins (relative to code root or absolute path)
+train_basin_file: grdc_3774.txt
+validation_basin_file: grdc_3774.txt
+test_basin_file: grdc_3774.txt
+
+# training, validation and test time periods (format = 'dd/mm/yyyy')
+train_start_date: '01/01/1984'
+train_end_date: '31/12/2010'
+validation_start_date: '01/01/2011'
+validation_end_date: '31/1/2014'
+test_start_date: '01/01/2015'
+test_end_date: '31/12/2021'
+
+# fixed seed, leave empty to use a random seed
+seed: 123
+
+# which GPU (id) to use [in format of cuda:0, cuda:1 etc, or cpu or None]
+device: cuda:0
+
+# --- Validation configuration ---------------------------------------------------------------------
+
+# specify after how many epochs to perform validation
+validate_every: 5
+
+# specify how many random basins to use for validation
+validate_n_random_basins: 3774
+
+# specify which metrics to calculate during validation (see codebase.evaluation.metrics)
+metrics:
+- NSE
+- RMSE
+- KGE
+
+# --- Model configuration --------------------------------------------------------------------------
+
+# base model type [lstm, ealstm, cudalstm, embcudalstm, shortcutlstm, dropoutlstm, cudalstminitialh, handoff_forecast_lstm ]
+# (has to match the if statement in modelzoo/__init__.py)
+model: handoff_forecast_lstm
+
+
+#An integer number of timesteps where forecast data overlaps with hindcast data. This does not add to the forecast_sequence_length, and must be no larger than the forecast_sequence_length
+forecast_overlap: 0
+forecast_seq_length: 1
+state_handoff_network: {"type": "full_model", "hiddens": 128}
+
+# prediction head [regression, mdn, umal]. Define the head specific parameters below
+head: regression
+
+
+# ----> Regression settings <----
+output_activation: linear
+
+# ----> General settings <----
+
+# Number of cell states of the LSTM
+hidden_size: 128
+
+# Initial bias value of the forget gate
+initial_forget_bias: 3
+
+# Dropout applied to the output of the LSTM
+output_dropout: 0.4
+
+# --- Training configuration -----------------------------------------------------------------------
+
+# specify optimizer [Adam, Adadelta]
+optimizer: Adam
+
+# specify loss [MSE, NSE, RMSE, UMALLoss, MDNLoss]
+loss: MSE
+#n_distributions: 2
+#n_samples: 500
+#negative_sample_handling: 'clip'
+#negative_sample_max_retries: 5
+#mc_dropout: True
+
+# specify learning rates to use starting at specific epochs (0 is the initial learning rate)
+learning_rate:
+    0: 1e-3
+    1: 5e-4
+
+# Mini-batch size
+batch_size: 256
+
+# Number of training epochs
+epochs: 50
+
+# If True, clips norm of gradients
+clip_gradient_norm: 1
+
+# Defines which time steps are used to calculate the loss. Can't be larger than seq_length
+predict_last_n: 1
+
+# Length of the input sequence
+seq_length: 366
+
+# Number of parallel workers used in the data pipeline
+num_workers: 0
+
+# Log the training loss every n steps
+log_interval: 5
+
+# If true, writes logging results into tensorboard file
+log_tensorboard: True
+
+# Save model weights every n epochs
+save_weights_every: 1
+
+# Store the results of the validation to disk
+save_validation_results: True
+
+# --- Data configurations --------------------------------------------------------------------------
+
+dataset: grdc
+
+# Path to CAMELS data set
+data_dir: G:/dataset/google/grdc/data/caravan-grdc-extension-csv/GRDC_Caravan_extension_csv
+
+# Forcing product [daymet, maurer, maurer_extended, nldas, nldas_extended]
+# can be either a list of forcings or a single forcing product
+forcings:
+- daymet
+
+# variables to use as time series input (names match the data file column headers)
+# Note: In case of multiple input forcing products, you have to append the forcing product behind
+# each variable. E.g. 'prcp(mm/day)' of the daymet product is 'prcp(mm/day)_daymet'
+dynamic_inputs:
+- total_precipitation_sum
+- temperature_2m_mean
+- surface_net_solar_radiation_mean
+- surface_net_thermal_radiation_mean
+- snow_depth_water_equivalent_mean
+- surface_pressure_mean
+# which columns to use as target
+target_variables:
+- streamflow
+
+forecast_inputs:
+- total_precipitation_sum
+- temperature_2m_mean
+- surface_net_solar_radiation_mean
+- surface_net_thermal_radiation_mean
+- snow_depth_water_equivalent_mean
+- surface_pressure_mean
+
+hindcast_inputs:
+- total_precipitation_sum
+- temperature_2m_mean
+- surface_net_solar_radiation_mean
+- surface_net_thermal_radiation_mean
+- snow_depth_water_equivalent_mean
+- surface_pressure_mean
+
+static_attributes:
+- area
+- inu_pc_smn
+- inu_pc_smx
+- lka_pc_sse
+- lkv_mc_usu
+- rev_mc_usu
+- ria_ha_usu
+- riv_tc_usu
+- ele_mt_sav
+- slp_dg_sav
+- tmp_dc_syr
+- pre_mm_syr
+- pet_mm_syr
+- aet_mm_syr
+- ari_ix_sav
+- cmi_ix_syr
+- snw_pc_syr
+- for_pc_sse
+- crp_pc_sse
+- pst_pc_sse
+- ire_pc_sse
+- gla_pc_sse
+- prm_pc_sse
+- pac_pc_sse
+- cly_pc_sav
+- slt_pc_sav
+- snd_pc_sav
+- soc_th_sav
+- swc_pc_syr
+- kar_pc_sse
+- ero_kh_sav
+- pop_ct_usu
+- ppd_pk_sav
+- urb_pc_sse
+- nli_ix_sav
+- gdp_ud_ssu
