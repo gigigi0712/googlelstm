@@ -1,0 +1,312 @@
+# --- Experiment configurations --------------------------------------------------------------------
+
+# experiment name, used as folder name
+experiment_name: hydrotopotrain2180_regress_daily_ours_h0_7_exp1
+
+# place to store run directory (if empty runs are stored in $cwd$/runs/)
+run_dir: /mnt/inaisfs/data/home/gaozy_criait/criait_gaozy/gzy/criait_gaozy/google/neuralhydrology-master/neuralhydrology-weather/googlelstm/new_test_dateset_runs/hydrotopotrain
+
+
+# files to specify training, validation and test basins (relative to code root or absolute path)
+train_basin_file: hydrotopotrain_2180.txt
+validation_basin_file:  hydrotopotrain_2180.txt
+test_basin_file:  hydrotopotrain_2180.txt
+
+# training, validation and test time periods (format = 'dd/mm/yyyy')
+# training, validation and test time periods (format = 'dd/mm/yyyy')
+train_start_date: "01/01/1985"
+train_end_date: "31/12/2024"
+validation_start_date: "01/01/1981"
+validation_end_date: "31/12/1984"
+test_start_date: "01/01/1981"
+test_end_date: "31/12/1984"
+
+# fixed seed, leave empty to use a random seed
+seed: 42
+
+# which GPU (id) to use [in format of cuda:0, cuda:1 etc, or cpu or None]
+#device: cuda:1
+
+# --- Validation configuration ---------------------------------------------------------------------
+
+# specify after how many epochs to perform validation
+validate_every: 1
+
+# specify how many random basins to use for validation
+validate_n_random_basins: 9999
+
+# specify which metrics to calculate during validation (see codebase.evaluation.metrics)
+metrics:
+- NSE
+- MSE
+- RMSE
+- KGE
+- Alpha-NSE
+- Pearson-r
+- Peak-Timing
+- Peak-MAPE
+- accp10
+- accp20
+#- RE-Peak-Timing
+#- RE-Peak-MAPE
+#- Get-Peak-Timing
+#- Get-Sim-Peak-Timing
+# --- Model configuration --------------------------------------------------------------------------
+
+# base model type [lstm, ealstm, cudalstm, embcudalstm, shortcutlstm, dropoutlstm, cudalstminitialh]
+# (has to match the if statement in modelzoo/__init__.py)
+model: handoff_forecast_lstm
+
+#An integer number of timesteps where forecast data overlaps with hindcast data. This does not add to the forecast_sequence_length, and must be no larger than the forecast_sequence_length
+forecast_overlap: 0
+forecast_seq_length: 7
+state_handoff_network: {"type": "full_model", "hiddens": 128}
+
+# prediction head [regression, mdn, umal]. Define the head specific parameters below
+head: regression
+#head: cmal
+# ----> General settings <----
+
+# Number of cell states of the LSTM
+hidden_size: 128
+
+# Initial bias value of the forget gate
+initial_forget_bias: 3
+
+# Dropout applied to the output of the LSTM
+output_dropout: 0.4
+
+output_activation: linear
+
+# --- Training configuration -----------------------------------------------------------------------
+
+# specify optimizer [Adam, Adadelta]
+optimizer: Adam
+
+# specify loss [MSE, NSE, RMSE, UMALLoss, MDNLoss]
+#loss: CMALLoss
+#n_distributions: 3
+#n_samples: 100
+#negative_sample_handling: 'clip'
+#negative_sample_max_retries: 5
+#mc_dropout: True
+
+loss: MSE
+# specify learning rates to use starting at specific epochs (0 is the initial learning rate)
+learning_rate:
+    0: 1e-3
+    1: 5e-4
+
+# Mini-batch size
+batch_size: 2048
+
+# Number of training epochs
+epochs: 50
+
+# If True, clips norm of gradients
+clip_gradient_norm: 1
+
+# Defines which time steps are used to calculate the loss. Can't be larger than seq_length
+predict_last_n: 8
+
+# Length of the input sequence
+seq_length: 372
+
+# Number of parallel workers used in the data pipeline
+num_workers: 0
+
+# Log the training loss every n steps
+log_interval: 5
+
+# If true, writes logging results into tensorboard file
+log_tensorboard: True
+
+# Save model weights every n epochs
+save_weights_every: 1
+
+# Store the results of the validation to disk
+save_validation_results: True
+
+# --- Data configurations --------------------------------------------------------------------------
+
+dataset: grdc
+
+# Path to CAMELS data set
+data_dir: /mnt/inaisfs/data/home/gaozy_criait/criait_gaozy/gzy/share/gaozhiyi/caravan
+# Forcing product [daymet, maurer, maurer_extended, nldas, nldas_extended]
+# can be either a list of forcings or a single forcing product
+forcings:
+- daymet
+
+# variables to use as time series input (names match the data file column headers)
+# Note: In case of multiple input forcing products, you have to append the forcing product behind
+# each variable. E.g. 'prcp(mm/day)' of the daymet product is 'prcp(mm/day)_daymet'
+dynamic_inputs:
+- sp
+- sf
+- t2m
+- ssr
+- str
+- e
+- tp
+- sp_L1
+- sp_L2
+- sp_L3
+- sp_L4
+- sp_L5
+- sp_L6
+- sp_L7
+- sf_L1
+- sf_L2
+- sf_L3
+- sf_L4
+- sf_L5
+- sf_L6
+- sf_L7
+- t2m_L1
+- t2m_L2
+- t2m_L3
+- t2m_L4
+- t2m_L5
+- t2m_L6
+- t2m_L7
+- ssr_L1
+- ssr_L2
+- ssr_L3
+- ssr_L4
+- ssr_L5
+- ssr_L6
+- ssr_L7
+- str_L1
+- str_L2
+- str_L3
+- str_L4
+- str_L5
+- str_L6
+- str_L7
+- e_L1
+- e_L2
+- e_L3
+- e_L4
+- e_L5
+- e_L6
+- e_L7
+- tp_L1
+- tp_L2
+- tp_L3
+- tp_L4
+- tp_L5
+- tp_L6
+- tp_L7
+
+
+
+
+
+#- streamflow
+# which columns to use as target
+target_variables:
+- qobs
+
+forecast_inputs:
+#- t2m_mean
+#- tp_sum # temperature_2m_mean
+- sp_L1
+- sp_L2
+- sp_L3
+- sp_L4
+- sp_L5
+- sp_L6
+- sp_L7
+- sf_L1
+- sf_L2
+- sf_L3
+- sf_L4
+- sf_L5
+- sf_L6
+- sf_L7
+- t2m_L1
+- t2m_L2
+- t2m_L3
+- t2m_L4
+- t2m_L5
+- t2m_L6
+- t2m_L7
+- ssr_L1
+- ssr_L2
+- ssr_L3
+- ssr_L4
+- ssr_L5
+- ssr_L6
+- ssr_L7
+- str_L1
+- str_L2
+- str_L3
+- str_L4
+- str_L5
+- str_L6
+- str_L7
+- e_L1
+- e_L2
+- e_L3
+- e_L4
+- e_L5
+- e_L6
+- e_L7
+- tp_L1
+- tp_L2
+- tp_L3
+- tp_L4
+- tp_L5
+- tp_L6
+- tp_L7
+
+hindcast_inputs:
+- sp
+- sf
+- t2m
+- ssr
+- str
+- e
+- tp
+
+
+static_attributes:
+- area
+- inu_pc_smn
+- inu_pc_smx
+- lka_pc_sse
+- lkv_mc_usu
+- rev_mc_usu
+- ria_ha_usu
+- riv_tc_usu
+- ele_mt_sav
+- slp_dg_sav
+- tmp_dc_syr
+- pre_mm_syr
+- pet_mm_syr
+- aet_mm_syr
+- ari_ix_sav
+- cmi_ix_syr
+- snw_pc_syr
+- for_pc_sse
+- crp_pc_sse
+- pst_pc_sse
+- ire_pc_sse
+- gla_pc_sse
+- prm_pc_sse
+- pac_pc_sse
+- cly_pc_sav
+- slt_pc_sav
+- snd_pc_sav
+- soc_th_sav
+- swc_pc_syr
+- kar_pc_sse
+- ero_kh_sav
+- pop_ct_usu
+- ppd_pk_sav
+- urb_pc_sse
+- nli_ix_sav
+- gdp_ud_ssu
+
+
